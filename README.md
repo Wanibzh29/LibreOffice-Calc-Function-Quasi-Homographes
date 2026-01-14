@@ -1,4 +1,4 @@
-# LibreOffice-Calc-Function-Quasi-Homographes
+# LibreOffice Calc Function quasi homographs
 * A little function to find the quasi homographs in a word list in LibreOffice Calc.
 
 ## I. Licences
