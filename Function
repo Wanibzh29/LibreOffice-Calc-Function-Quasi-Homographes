@@ -1,0 +1,84 @@
+Function QuasiHomos(mot As String, plage As Variant) As String
+    Dim liste As String
+    Dim txt As String
+    Dim i As Long, j As Long
+    Dim data As Variant
+    Dim rLow As Long, rHigh As Long, cLow As Long, cHigh As Long
+
+    ' Normaliser mot
+    mot = Trim(CStr(mot))
+    If mot = "" Then
+        QuasiHomos = ""
+        Exit Function
+    End If
+    mot = LCase(mot)
+
+    ' Plage nulle ou vide
+    If IsNull(plage) Or IsEmpty(plage) Then
+        QuasiHomos = ""
+        Exit Function
+    End If
+
+    On Error GoTo handleError
+
+    ' --- Cas 1 : plage est un objet Range ---
+    If IsObject(plage) Then
+        On Error Resume Next
+        data = plage.getDataArray()
+        If Err.Number = 0 Then
+            For i = LBound(data) To UBound(data)
+                For j = LBound(data(i)) To UBound(data(i))
+                    txt = Trim(CStr(data(i)(j)))
+                    If txt <> "" Then
+                        If LCase(txt) <> mot Then
+                            If Levenshtein(mot, LCase(txt)) <= 2 Then
+                                If liste <> "" Then liste = liste & ", "
+                                liste = liste & txt
+                            End If
+                        End If
+                    End If
+                Next j
+            Next i
+            QuasiHomos = liste
+            Exit Function
+        End If
+        Err.Clear
+        On Error GoTo handleError
+
+        Dim cell As Object
+        For Each cell In plage.Cells
+            txt = Trim(cell.String)
+            If txt <> "" And LCase(txt) <> mot Then
+                If Levenshtein(mot, LCase(txt)) <= 2 Then
+                    If liste <> "" Then liste = liste & ", "
+                    liste = liste & txt
+                End If
+            End If
+        Next cell
+
+        QuasiHomos = liste
+        Exit Function
+    End If
+
+    ' --- Cas 2 : plage est un tableau ---
+    If IsArray(plage) Then
+        rLow = LBound(plage, 1) : rHigh = UBound(plage, 1)
+        cLow = LBound(plage, 2) : cHigh = UBound(plage, 2)
+        For i = rLow To rHigh
+            For j = cLow To cHigh
+                txt = Trim(CStr(plage(i)(j)))
+                If txt <> "" And LCase(txt) <> mot Then
+                    If Levenshtein(mot, LCase(txt)) <= 2 Then
+                        If liste <> "" Then liste = liste & ", "
+                        liste = liste & txt
+                    End If
+                End If
+            Next j
+        Next i
+        QuasiHomos = liste
+        Exit Function
+    End If
+
+handleError:
+    QuasiHomos = liste
+End Function
